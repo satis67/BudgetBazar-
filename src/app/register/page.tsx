@@ -160,7 +160,7 @@ const RegisterPage = () => {
             <button onClick={handleGoogleLogin} className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-xl text-white transition-all text-sm">
               <Chrome size={18} className="text-red-400" /> Google
             </button>
-            <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 py-3 rounded-xl text-white transition-all text-sm">
+            <button disabled title="Coming Soon" className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 py-3 rounded-xl text-gray-500 transition-all text-sm cursor-not-allowed opacity-50">
               <Github size={18} /> GitHub
             </button>
           </div>

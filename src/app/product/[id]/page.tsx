@@ -28,9 +28,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     setTimeout(() => setAdded(false), 2000);
   };
 
+  const [checking, setChecking] = useState(false);
+
   const checkDelivery = () => {
     if (pincode.length === 6) {
-      setDeliveryStatus(`Delivery by ${new Date(Date.now() + product.deliveryDays * 86400000).toLocaleDateString()}`);
+      setChecking(true);
+      setDeliveryStatus(null);
+      setTimeout(() => {
+        setDeliveryStatus(`Delivery by ${new Date(Date.now() + product.deliveryDays * 86400000).toLocaleDateString()}`);
+        setChecking(false);
+      }, 1500);
     } else {
       setDeliveryStatus("Please enter a valid 6-digit pincode");
     }
@@ -157,9 +164,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     />
                     <button 
                       onClick={checkDelivery}
-                      className="text-indigo-600 font-bold text-sm px-4 py-2 hover:bg-indigo-50 rounded-xl transition-all"
+                      disabled={checking || pincode.length !== 6}
+                      className={`text-indigo-600 font-bold text-sm px-4 py-2 rounded-xl transition-all ${checking || pincode.length !== 6 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-50'}`}
                     >
-                      Check
+                      {checking ? 'Checking...' : 'Check'}
                     </button>
                   </div>
                   {deliveryStatus && (

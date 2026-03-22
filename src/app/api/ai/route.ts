@@ -32,7 +32,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           model: 'llama3-8b-8192',
           messages: [
-            { role: 'system', content: 'You are Budget Bazar AI — a smart shopping assistant for an Indian e-commerce marketplace. You are helping Shahil find products, compare items, manage budgets, and get the best deals. Be concise, friendly, and helpful. Always respond in under 80 words.' },
+            { role: 'system', content: 'You are Budget Bazar AI — a smart shopping assistant for an Indian e-commerce marketplace. Help users find the best products, compare items, manage budgets, and get the best deals. Be concise, friendly, and helpful. Always respond in under 80 words.' },
             ...(history || []),
             { role: 'user', content: message }
           ],
