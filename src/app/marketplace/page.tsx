@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PRODUCTS, CATEGORIES } from '../../lib/data';
 import ProductCard from '../../components/ProductCard';
@@ -13,26 +13,38 @@ const PRICE_RANGES = [
   { label: 'Above ₹1,50,000', min: 150000 },
 ];
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
   const params = useSearchParams();
   const [search, setSearch] = useState(params.get('search') || '');
   const [category, setCategory] = useState(params.get('category') || 'All');
   const [sort, setSort] = useState('Relevance');
-  const [priceRange, setPriceRange] = useState<{ min?: number; max?: number; label?: string } | null>(null);
-  const [rating, setRating] = useState(0);
+  const [priceRange, setPriceRange] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
-    let p = [...PRODUCTS];
-    if (category !== 'All') p = p.filter(pr => pr.category === category);
-    if (search) p = p.filter(pr => pr.name.toLowerCase().includes(search.toLowerCase()) || (pr.tags && pr.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))));
-    if (priceRange) p = p.filter(pr => (!priceRange.min || pr.price >= priceRange.min) && (!priceRange.max || pr.price <= priceRange.max));
-    if (rating > 0) p = p.filter(pr => pr.rating >= rating);
-    if (sort === 'Price: Low to High') p.sort((a, b) => a.price - b.price);
-    else if (sort === 'Price: High to Low') p.sort((a, b) => b.price - a.price);
-    else if (sort === 'Best Rating') p.sort((a, b) => b.rating - a.rating);
-    else if (sort === 'Most Reviews') p.sort((a, b) => b.reviews - a.reviews);
-    return p;
-  }, [category, search, sort, priceRange, rating]);
+    let list = PRODUCTS.filter(p => {
+      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
+                          (p.tags && p.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))); // Reverted to original search logic for tags
+      const matchCat = category === 'All' || p.category === category;
+      
+      let matchPrice = true;
+      if (priceRange) {
+        const range = PRICE_RANGES.find(r => r.label === priceRange);
+        if (range) {
+          if (range.min && p.price < range.min) matchPrice = false;
+          if (range.max && p.price > range.max) matchPrice = false;
+        }
+      }
+
+      return matchSearch && matchCat && matchPrice;
+    });
+
+    if (sort === 'Price: Low to High') list.sort((a, b) => a.price - b.price);
+    else if (sort === 'Price: High to Low') list.sort((a, b) => b.price - a.price);
+    else if (sort === 'Best Rating') list.sort((a, b) => b.rating - a.rating);
+    else if (sort === 'Most Reviews') list.sort((a, b) => b.reviews - a.reviews);
+
+    return list;
+  }, [search, category, sort, priceRange]);
 
   return (
     <div className="page">
