@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState, Fragment } from 'react';
 import Link from 'next/link';
 import { useStore } from '../../lib/store';

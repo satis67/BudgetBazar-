@@ -28,6 +28,10 @@ const LoginPage = () => {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) {
+      setError("Authentication is not configured. Please check your environment variables.");
+      return;
+    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");

@@ -29,9 +29,15 @@ export interface User {
   avatar?: string;
 }
 export interface Order {
-  id: string; items: CartItem[]; total: number;
-  status: 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
-  createdAt: string; deliveryDate: string;
+  id: string; 
+  userId: string;
+  items: CartItem[]; 
+  totalAmount: number;
+  paymentMethod: 'COD' | 'Online';
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  address: string;
+  createdAt: string; 
+  deliveryDate: string;
 }
 export interface Auction {
   id: string; productId: string; productName: string;

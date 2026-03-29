@@ -29,7 +29,7 @@ const storage = app ? getStorage(app) : null;
 let analytics: any;
 if (typeof window !== "undefined") {
   isSupported().then((supported) => {
-    if (supported) analytics = getAnalytics(app);
+    if (supported && app) analytics = getAnalytics(app);
   });
 }
 

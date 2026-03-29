@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../lib/store';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, Truck, MapPin, Info, AlertTriangle, Loader2 } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, Truck, MapPin, Info, AlertTriangle, Loader2, Package, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import CheckoutButton from '@/components/CheckoutButton';
 
@@ -121,7 +121,7 @@ export default function CartPage() {
                 className="backdrop-blur-2xl bg-white/5 border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <CreditCard size={120} />
+                  <Package size={120} />
                 </div>
 
                 <h3 className="text-2xl font-black mb-8">Order Summary</h3>
@@ -199,10 +199,11 @@ export default function CartPage() {
                   onSuccess={() => setAddress("")}
                 />
                 
-                <div className="mt-8 flex items-center justify-center gap-6 opacity-40 grayscale contrast-200">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-5" />
+                <div className="mt-8 flex flex-col items-center justify-center gap-2 py-4 border-t border-white/5 opacity-60">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-indigo-400">
+                    <Truck size={14} /> Cash on Delivery Available
+                  </div>
+                  <p className="text-[10px] text-gray-500 font-medium">Safe & Secure Physical Payments</p>
                 </div>
               </motion.div>
             </div>

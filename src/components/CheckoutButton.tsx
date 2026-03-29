@@ -72,7 +72,7 @@ const CheckoutButton: React.FC<CheckoutButtonProps> = ({ amount, items, address,
         </>
       ) : (
         <>
-          Place Order (COD) <ShieldCheck size={20} className="group-hover:scale-110 transition-transform" />
+          Place Order (Cash on Delivery) <ShieldCheck size={20} className="group-hover:scale-110 transition-transform" />
         </>
       )}
     </button>

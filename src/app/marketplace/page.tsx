@@ -1,7 +1,7 @@
 'use client';
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CATEGORIES } from '../../lib/data';
+import { CATEGORIES, PRODUCTS } from '../../lib/data';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/ProductCard';
 
@@ -27,6 +27,11 @@ function MarketplaceContent() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
+      if (!supabase) {
+        setProducts(PRODUCTS);
+        setLoading(false);
+        return;
+      }
       let query = supabase.from('products').select('*');
       if (search) {
         query = query.ilike('name', `%${search}%`);

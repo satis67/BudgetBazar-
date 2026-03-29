@@ -30,6 +30,10 @@ const RegisterPage = () => {
       setError("Passwords do not match");
       return;
     }
+    if (!auth) {
+      setError("Authentication is not configured. Please check your environment variables.");
+      return;
+    }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       if (name) {
