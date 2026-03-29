@@ -2,10 +2,13 @@
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../lib/store';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, Truck, CreditCard, Info, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, Truck, MapPin, Info, AlertTriangle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import CheckoutButton from '@/components/CheckoutButton';
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQty, clearCart, cartTotal, budget } = useStore();
+  const [address, setAddress] = useState("");
   const savings = cart.reduce((s, i) => s + (i.originalPrice - i.price) * i.qty, 0);
   const delivery = cartTotal > 999 ? 0 : 49;
   const grandTotal = cartTotal + delivery;
@@ -171,14 +174,30 @@ export default function CartPage() {
 
                 <div className="h-px bg-white/10 mb-6" />
 
+                {/* Shipping Address */}
+                <div className="mb-8">
+                  <h4 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
+                    <MapPin size={14} /> Shipping Address
+                  </h4>
+                  <textarea 
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter full address, pincode, and phone..."
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 h-24 resize-none"
+                  />
+                </div>
+
                 <div className="flex justify-between items-end mb-10">
                   <span className="text-xs font-black uppercase tracking-widest text-gray-500">Total Amount</span>
                   <span className="text-4xl font-black tracking-tighter text-indigo-400">₹{grandTotal.toLocaleString()}</span>
                 </div>
 
-                <button className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-3 group">
-                  Secure Checkout <ShieldCheck size={20} className="group-hover:scale-110 transition-transform" />
-                </button>
+                <CheckoutButton 
+                  amount={grandTotal} 
+                  items={cart} 
+                  address={address} 
+                  onSuccess={() => setAddress("")}
+                />
                 
                 <div className="mt-8 flex items-center justify-center gap-6 opacity-40 grayscale contrast-200">
                   <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4" />

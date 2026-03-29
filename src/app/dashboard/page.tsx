@@ -1,21 +1,37 @@
-'use client';
-import { useState, Fragment } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import Link from 'next/link';
 import { useStore } from '../../lib/store';
-import { PRODUCTS } from '../../lib/data';
+import { useAuth } from '@/context/AuthContext';
+import { getUserOrders } from '@/lib/firestore';
+import { Order } from '@/lib/types';
+import { Loader2, Package, Trophy, ShoppingBag, Heart } from 'lucide-react';
 
-const ORDERS = [
-  { id: 'ORD-2024-001', name: 'iPhone 16 Pro Max 256GB', status: 'delivered', date: '2024-12-01', total: 134900 },
-  { id: 'ORD-2024-002', name: 'Sony WH-1000XM5 ANC', status: 'shipped', date: '2025-01-15', total: 28990 },
-  { id: 'ORD-2024-003', name: 'MacBook Air M3 15"', status: 'confirmed', date: '2025-03-18', total: 149900 },
-];
-
-const STATUS_STEPS = ['placed', 'confirmed', 'shipped', 'delivered'];
+const STATUS_STEPS = ['pending', 'confirmed', 'shipped', 'delivered'];
 
 export default function DashboardPage() {
+  const { user: authUser } = useAuth();
   const { budget, setBudget, cart, wishlist, cartTotal } = useStore();
   const [newBudget, setNewBudget] = useState(String(budget));
-  const points = cart.length * 25 + wishlist.length * 5;
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (authUser) {
+      const fetchOrders = async () => {
+        try {
+          const data = await getUserOrders(authUser.uid);
+          setOrders(data);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchOrders();
+    }
+  }, [authUser]);
+
+  const points = cart.length * 25 + wishlist.length * 5 + orders.length * 100;
 
   return (
     <div className="page">
@@ -25,13 +41,13 @@ export default function DashboardPage() {
         {/* Stats Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '3rem' }}>
           {[
-            { icon: '🏆', label: 'Smart Points', value: points, color: 'var(--warning)' },
-            { icon: '🛒', label: 'Cart Items', value: cart.length, color: 'var(--primary)' },
-            { icon: '❤️', label: 'Wishlisted', value: wishlist.length, color: 'var(--secondary)' },
-            { icon: '📦', label: 'Total Orders', value: ORDERS.length, color: 'var(--accent)' },
+            { icon: <Trophy size={24} />, label: 'Smart Points', value: points, color: 'var(--warning)' },
+            { icon: <ShoppingBag size={24} />, label: 'Cart Items', value: cart.length, color: 'var(--primary)' },
+            { icon: <Heart size={24} />, label: 'Wishlisted', value: wishlist.length, color: 'var(--secondary)' },
+            { icon: <Package size={24} />, label: 'Total Orders', value: orders.length, color: 'var(--accent)' },
           ].map(s => (
             <div key={s.label} className="stat-card">
-              <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{s.icon}</div>
+              <div style={{ marginBottom: '0.5rem', color: s.color }}>{s.icon}</div>
               <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
               <div className="stat-label">{s.label}</div>
             </div>
@@ -85,31 +101,44 @@ export default function DashboardPage() {
         {/* Orders */}
         <div className="card p-3">
           <h3 style={{ marginBottom: '1.5rem' }}>📦 My Orders</h3>
-          {ORDERS.map(order => {
-            const stepIdx = STATUS_STEPS.indexOf(order.status);
-            return (
-              <div key={order.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-                <div className="flex-between mb-2">
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{order.name}</div>
-                    <div className="text-muted text-sm">{order.id} · {order.date}</div>
+          {loading ? (
+            <div className="flex-center py-5">
+              <Loader2 className="animate-spin" size={32} />
+            </div>
+          ) : orders.length === 0 ? (
+            <p className="text-muted text-center py-5">No orders found.</p>
+          ) : (
+            orders.map(order => {
+              const stepIdx = STATUS_STEPS.indexOf(order.status || 'pending');
+              const firstItem = order.items?.[0];
+              const orderName = order.items?.length > 1 
+                ? `${firstItem?.name} + ${order.items.length - 1} more`
+                : firstItem?.name || 'Order';
+
+              return (
+                <div key={order.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div className="flex-between mb-2">
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{orderName}</div>
+                      <div className="text-muted text-sm">{order.id} · {new Date(order.createdAt).toLocaleDateString()}</div>
+                    </div>
+                    <div style={{ fontWeight: 700 }}>₹{order.totalAmount.toLocaleString()}</div>
                   </div>
-                  <div style={{ fontWeight: 700 }}>₹{order.total.toLocaleString()}</div>
+                  <div className="order-status-bar">
+                    {STATUS_STEPS.map((step, i) => (
+                      <Fragment key={step}>
+                        <div className={`order-step ${i <= stepIdx ? 'done' : ''}`}>
+                          <div className="order-step-circle">{i <= stepIdx ? '✓' : i + 1}</div>
+                          <span style={{ textTransform: 'capitalize' }}>{step}</span>
+                        </div>
+                        {i < STATUS_STEPS.length - 1 && <div className={`order-step-line ${i < stepIdx ? 'done' : ''}`} />}
+                      </Fragment>
+                    ))}
+                  </div>
                 </div>
-                <div className="order-status-bar">
-                  {STATUS_STEPS.map((step, i) => (
-                    <Fragment key={step}>
-                      <div className={`order-step ${i <= stepIdx ? 'done' : ''}`}>
-                        <div className="order-step-circle">{i <= stepIdx ? '✓' : i + 1}</div>
-                        <span style={{ textTransform: 'capitalize' }}>{step}</span>
-                      </div>
-                      {i < STATUS_STEPS.length - 1 && <div className={`order-step-line ${i < stepIdx ? 'done' : ''}`} />}
-                    </Fragment>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </div>

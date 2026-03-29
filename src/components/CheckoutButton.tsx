@@ -1,70 +1,81 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useStore } from '@/lib/store';
+import { createOrder } from '@/lib/firestore';
+import { ShieldCheck, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface CheckoutButtonProps {
   amount: number;
-  productId: string;
+  items: any[];
+  address: string;
+  onSuccess?: () => void;
 }
 
-const CheckoutButton: React.FC<CheckoutButtonProps> = ({ amount, productId }) => {
+const CheckoutButton: React.FC<CheckoutButtonProps> = ({ amount, items, address, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const { clearCart } = useStore();
+  const router = useRouter();
 
-  const handlePayment = async () => {
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      alert("Please login to place an order.");
+      router.push('/login');
+      return;
+    }
+
+    if (!address || address.trim().length < 10) {
+      alert("Please enter a valid shipping address.");
+      return;
+    }
+
     setLoading(true);
     try {
-      // 1. Create order on the server
-      const response = await fetch('/api/checkout/razorpay', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, productId }),
-      });
-      
-      const order = await response.json();
-
-      // 2. Open Razorpay Checkout
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: "INR",
-        name: "Budget Bazar",
-        description: `Purchase for product ${productId}`,
-        order_id: order.id,
-        handler: function (response: any) {
-          alert(`Payment Successful! ID: ${response.razorpay_payment_id}`);
-          // Redirect to success page or update UI
-        },
-        prefill: {
-          name: "User Name",
-          email: "user@example.com",
-          contact: "9999999999",
-        },
-        theme: {
-          color: "#4f46e5",
-        },
+      const orderData = {
+        userId: user.uid,
+        items,
+        totalAmount: amount,
+        address,
+        paymentMethod: "COD" as const,
+        status: "pending" as const,
+        deliveryDate: new Date(Date.now() + 7 * 86400000).toISOString(), // 7 days from now
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+      const orderId = await createOrder(orderData as any);
+      
+      if (orderId) {
+        alert("Order placed successfully! (Cash on Delivery)");
+        clearCart();
+        if (onSuccess) onSuccess();
+        router.push('/dashboard');
+      }
     } catch (error) {
-      console.error("Payment failed", error);
-      alert("Payment failed. Please check console.");
+      console.error("Order placement failed", error);
+      alert("Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
-      <button
-        onClick={handlePayment}
-        disabled={loading}
-        className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:bg-gray-400"
-      >
-        {loading ? "Processing..." : `Pay ₹${amount}`}
-      </button>
-    </>
+    <button
+      onClick={handlePlaceOrder}
+      disabled={loading || items.length === 0}
+      className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-3 group disabled:bg-gray-700 disabled:shadow-none"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="animate-spin" size={20} /> Processing...
+        </>
+      ) : (
+        <>
+          Place Order (COD) <ShieldCheck size={20} className="group-hover:scale-110 transition-transform" />
+        </>
+      )}
+    </button>
   );
 };
 

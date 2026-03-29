@@ -15,10 +15,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+const isFirebaseConfigured = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "your_firebase_api_key";
+
+const app = isFirebaseConfigured 
+  ? (getApps().length > 0 ? getApp() : initializeApp(firebaseConfig))
+  : null;
+
+const auth = app ? getAuth(app) : null;
+const db = app ? getFirestore(app) : null;
+const storage = app ? getStorage(app) : null;
 
 // Analytics (Only on client)
 let analytics: any;

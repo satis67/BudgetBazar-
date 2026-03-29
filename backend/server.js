@@ -29,9 +29,15 @@ app.use('/api/coders', require('./routes/coderRoutes'));
 app.use('/api/hire', require('./routes/hireRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 
-// Test route
-app.get('/', (req, res) => {
-  res.send('API is running...');
+const path = require('path');
+
+// Serve Frontend static files
+const __dirnameBase = path.resolve();
+app.use(express.static(path.join(__dirnameBase, '../frontend/dist')));
+
+// Fallback wildcard routing for React Router
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirnameBase, '../frontend/dist/index.html'));
 });
 
 // Socket.io Config for Chat & Notifications
